@@ -288,7 +288,7 @@ window.onload = function () {
                 //定义4个空白的索引值,用于后续判断胜负
                 var index1,index2,index3,index4;
                 index1 = index2 = index3 = index4 = 0;
-                //调用四个方向上的胜负判断函数,传入空白索引,位置数组和当前棋子颜色
+                //调用四个方向上的胜负判断函数，传入空白索引，位置数组和当前棋子颜色以及当前点击的坐标值
                 testWin(index1,arr1,color,x3,y3);
                 testWin(index2,arr2,color,x3,y3);
                 testWin(index3,arr3,color,x3,y3);
@@ -303,11 +303,11 @@ window.onload = function () {
                 //是白子
                 test('white');
             };
-            //胜负判断函数,传入计数值,数组与当前棋子的颜色
+            //胜负判断函数,传入计数值,数组与当前棋子的颜色以及当前点击位置棋子的坐标值
             function testWin(index,arr,color,x3,y3) {
                 //定义空数组用于保存每次符合条件的坐标值
                 var result = [];
-                //获取相同颜色的棋子
+                //获取相同颜色的棋子元素对象
                 var sameChess = $('i[class='+color+']');
                 //对所有相同颜色的棋子的坐标循环遍历
                 for ( var j=0;j<sameChess.length;j++ ) {
@@ -321,7 +321,7 @@ window.onload = function () {
                 };
                 //当满足条件的数组result的长度大于或者等于5时,这里不能仅仅将等于5作为判断条件,因为存在中间为空,两边都下了相同棋子的情况,此时虽然没有连成连续的5个相同的棋子,但是满足数组坐标条件的棋子已经大于5个了,所以此时判断条件为大于等于5
                 if ( result.length>=5 ) {
-                    //这里需要对满足条件的数组result中的值进行大小排序,因为有可能存在满足判断胜负条件的5个坐标值,但是5个坐标值的不是按顺序排列的,那么在对其进行连续判断的时候就无法做出正确的判断,所以要提前对其进行排序处理
+                    //这里需要对满足条件的数组result中的值进行大小排序,因为有可能存在满足判断胜负条件的5个坐标值,但是5个坐标值不是按顺序排列的,那么在对其进行连续判断的时候就无法做出正确的判断,所以要提前对其进行排序处理
                     //根据result数组中的坐标的left值来判断,当处于垂直排列的满足条件的5个棋子时,则需要根据top值来对其进行排列,因为此时left值都相等,无法根据left值来判断,其他三个方向上的满足条件的坐标值的left值都不同,都可以根据left值的大小来进行排序
                     if ( result[0].left==result[1].left ) {
                         result.sort(function (a,b) {
@@ -333,8 +333,8 @@ window.onload = function () {
                             return a.left - b.left;
                         });
                     };
-                    //发现一个bug:当存在一个空白格子两边都有3个或者4个同色棋子时,就会判断出胜负,而实际上这样还没有达到胜出的条件,正确的判断条件是:1.如果当前棋子位置处于排序后的数组result的首部或者尾部,则当前位置的前后必须为连续的5个坐标; 2.如果当前棋子位置没有处于排序后的数组result的首部或者尾部,也即处于中间位置,则此时必须保证当前棋子的相邻的两个位置有同色棋子,也即保证当前棋子位置与它两个相邻棋子位置的left值的差值和top值的差值小于等于d;
-                    //一下为解决方法
+                    //发现一个bug:当存在一个空白格子两边都有3个或者4个同色棋子时,就会判断出胜负,而实际上这样还没有达到胜出的条件,正确的判断条件是:1.如果当前棋子位置处于排序后的数组result的首部或者尾部,则当前位置的前或后必须为连续的5个坐标值; 2.如果当前棋子位置没有处于排序后的数组result的首部或者尾部,也即处于中间位置,则此时必须保证与当前棋子的相邻的两个位置有同色棋子,也即保证当前棋子位置与它两个相邻棋子位置的left值的差值和top值的差值小于等于d;
+                    //以下为解决方法
                     //获取当前棋子坐标在数组result中的位置索引
                     function getCenterPos(x3,y3) {
                         for ( var i=0;i<result.length;i++ ) {
@@ -344,16 +344,17 @@ window.onload = function () {
                         };
                     };
 
-                    //获取当前棋子以及与其相邻的两个棋子的left与top值
+                    //获取当前棋子与其相邻的两个棋子的left值与top值的差值
                     var cenIndex = getCenterPos(x3,y3);
                     var cenPos = result[cenIndex];
+                    //当当前棋子的位置坐标在result数组中处于首部或尾部时,就让其前或后一个位置坐标值就默认设置为与其相等
                     var propPos = result[cenIndex-1] || cenPos;
                     var nextPos = result[cenIndex+1] || cenPos;
                     var propLeft = cenPos.left - propPos.left;
                     var nextRight = nextPos.left - cenPos.left;
                     var propTop = cenPos.top - propPos.top;
                     var nextTop = nextPos.top - cenPos.top;
-                    //当当前棋子位置与它相邻两个棋子位置的left值的差值和top值的差值都小于等于d时才可能进去胜负判断条件;
+                    //当当前棋子位置与它相邻两个棋子位置的left值的差值和top值的差值都小于等于d时才可能分出胜负,此时才进入胜负判断条件,这样做也有利于性能优化,避免了明显不满足条件而仍然去进行胜负判断的内存消耗占用;
                     if ( propLeft<=d && nextRight<=d && propTop<=d && nextTop<=d  ) {
                         //这里对已经进行排序处理的result数组遍历,当其存在前后连续的坐标值时,就让索引值加一
                         for ( var m=0;m<result.length-1;m++ ) {
