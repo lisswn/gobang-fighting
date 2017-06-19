@@ -204,18 +204,18 @@ window.onload = function () {
         //设置一小段时间的点击延迟,原因是如果下棋点击太快后续的胜负判断来不及完成导致胜负判断失效
         setTimeout(function () {
             //获取当前鼠标点击位置的棋子坐标
-            function getPos() {
-                var pageX = e.pageX - oDiv.offset().left;
-                var pageY = e.pageY - oDiv.offset().top;
+           function getPos() {
+                var clientX = e.clientX - oDiv.offset().left + $(window).scrollLeft();
+                var clientY = e.clientY - oDiv.offset().top + $(window).scrollTop();
 
                 //获取鼠标点击的位置坐标
-                var x1 = Math.floor(pageX / d);
-                var y1 = Math.floor(pageY / d);
+                var x1 = Math.floor(clientX / d);
+                var y1 = Math.floor(clientY / d);
                 //设置生成的棋子的坐标
                 var x2 = x1 * d + 2;
                 var y2 = y1 * d + 2;
                 return {x:x2,y:y2};
-            }
+            };
 
             createPieces();
             //点击创建黑白棋子函数
